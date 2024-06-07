@@ -1,0 +1,87 @@
+anserTest:
+  testCases:
+    baseUrl: 'http://localhost:8080'
+
+    # 定义变量
+    var:
+      - inputUsername
+      - inputPassword
+      - outputUsername
+      - token
+
+    testCase:
+      - name: 测试登录账号并获得个人信息 比对登录信息和获得的个人信息
+        # 初始化变量
+        initVar:
+          - var: inputUsername
+            value: 'jinyong'
+          - var: inputPassword
+            value: '123456'
+
+        # 测试接口
+        api:
+          - url: '/login'
+            method: POST
+            # 将变量的值放入请求体中
+            request:
+              body:
+                - key: 'username'
+                  value: inputUsername
+                - key: 'password'
+                  value: inputPassword
+            # 将返回值放入变量中
+            response:
+              body:
+                - var: outputUsername
+                  value: 'data.empVo.username'
+        # 对变量进行断言测试
+        assertVar:
+          - var: outputUsername
+            match: inputUsername
+
+
+      - name: 测试登录账号并获得个人信息 比对登录信息和获得的个人信息
+        # 初始化变量
+        initVar:
+          - var: inputUsername
+            value: 'jinyong'
+          - var: inputPassword
+            value: '123456'
+
+
+        # 测试接口
+        api:
+          - url: '/login'
+            method: POST
+            # 将变量的值放入请求体中
+            request:
+              body:
+                - key: 'username'
+                  value: inputUsername
+                - key: 'password'
+                  value: inputPassword
+            # 将返回值放入变量中
+            response:
+              body:
+                - var: token
+                  # 这里 如果返回的是列表怎么办？
+                  value: 'data.token'
+                - var: outputUsername
+                  value: 'data.empVo.username'
+          - url: '/user/information'
+            method: GET
+            request:
+              header:
+                - key: 'Authorization'
+                  value: token
+            response:
+              body:
+                - var: name
+                  value: 'data.username'
+
+        # 对变量进行断言测试
+        assertVar:
+          - var: outputNumber
+            match: testNumber
+          - var: name
+            match: assertName

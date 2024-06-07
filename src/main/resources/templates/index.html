@@ -1,0 +1,383 @@
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3"></script>
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+    <!-- import JavaScript -->
+    <script src="https://unpkg.com/element-plus"></script>
+    <script src="https://unpkg.com/@element-plus/icons-vue@latest/dist/index.full.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>Anser-Test demo</title>
+    <style scoped>
+        .testCard {
+            margin: 10px;
+            flex-grow: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="importmap">
+  {
+    "imports": {
+      "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+    }
+  }
+</script>
+    <div id="app">
+        <div class="common-layout">
+            <el-container>
+                <el-header style="margin-top: 30px; margin-left: 10px;">
+                    <div style="font-weight: bold; font-size: 2em; ">
+                        Anser-Test Demo
+                    </div>
+                    <div>
+                        v2024.6.5-dev
+                    </div>
+                </el-header>
+                <el-main>
+                    <div style="display: flex;">
+                        <el-card class="testCard" style="flex-grow: 1;">
+                            <h1>查看项目</h1>
+                            <div class="inputGithubUrl">
+                                请输入 Github 仓库链接：<el-button type="primary" @click="fetchRepo()"
+                                    v-loading="loading">拉取代码</el-button>
+                                <el-input v-model="githubUrl" placeholder="Please input Github Repo Url" clearable
+                                    style="margin-top: 10px;">
+                                </el-input>
+                            </div>
+                            <el-table :data="repoEntityList" row-key="repoIndex" style="width: 100%;">
+                                <el-table-column prop="repoIndex" label="编号" width="60px"></el-table-column>
+                                <el-table-column prop="repoName" label="作者/仓库" min-width="250px"></el-table-column>
+                                <!-- <el-table-column prop="repoBranch" label="分支" width="100px"></el-table-column> -->
+                                <el-table-column label="操作" min-width="250px">
+                                    <template #default="scope">
+                                        <el-button type="primary" link @click="showComing()">修改信息</el-button>
+                                        <el-button type="primary" link @click="editRepoCode(scope.row)">编辑代码</el-button>
+                                        <el-button type="primary" link @click="showComing()">构建</el-button>
+                                        <el-button type="danger" link @click="showComing()">删除</el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-card>
+                        <el-card class="testCard" style="flex-grow: 1;">
+                            <h1>构建项目</h1>
+                            <div class="inputGithubUrl">
+                                请选择项目代码：<el-button type="primary" @click="showComing()">构建</el-button>
+                                <el-input v-model="githubUrl" placeholder="Please input Github Repo Url" clearable
+                                    disabled style="margin-top: 10px;">
+                                </el-input>
+                            </div>
+                            <el-table :data="projEntityList" row-key="projIndex" style="width: 100%;">
+                                <el-table-column prop="projIndex" label="编号" width="60px"></el-table-column>
+                                <el-table-column prop="projName" label="Jar包名称" min-width="250px"></el-table-column>
+                                <!-- <el-table-column prop="projBranch" label="" width="100px"></el-table-column> -->
+                                <el-table-column label="操作" min-width="250px">
+                                    <template #default="scope">
+                                        <el-button type="primary" link @click="showComing()">修改信息</el-button>
+                                        <!-- <el-button type="primary" link @click="editRepoCode(scope.row)">编辑代码</el-button> -->
+                                        <el-button type="primary" link @click="showComing()">运行</el-button>
+                                        <el-button type="danger" link @click="showComing()">删除</el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-card>
+
+                    </div>
+                    <div>
+                    <el-card class="testCard" style="flex-grow: 1;">
+                        <h1>运行项目</h1>
+<!--                        <div class="inputJarPath">-->
+<!--                            请输入 Jar 包地址：<el-button type="primary">运行项目</el-button>-->
+<!--                            <el-input v-model="jarPath" placeholder="Please input .jar path" clearable-->
+<!--                                      style="margin-top: 10px;">-->
+<!--                            </el-input>-->
+<!--                        </div>-->
+                        <el-table :data="runningEntityList" row-key="runningIndex" style="width: 100%;">
+                            <el-table-column prop="runningIndex" label="编号" width="60px"></el-table-column>
+                            <el-table-column prop="runningName" label="项目名称" min-width="200px"></el-table-column>
+                            <el-table-column prop="runningUrl" label="运行地址" width="140px"></el-table-column>
+                            <el-table-column prop="runningType" label="运行状态" width="100px"></el-table-column>
+                            <el-table-column label="操作" min-width="250px">
+                                <template #default="scope">
+                                    <el-button type="primary" link>停止/启动</el-button>
+                                    <!-- <el-button type="primary" link @click="editRepoCode(scope.row)">编辑代码</el-button> -->
+                                    <el-button type="primary" link>填入</el-button>
+                                    <el-button type="danger" link>删除</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-card>
+                    </div>
+                    <div style="display: flex;">
+                        <el-card class="testCard">
+                            <h1>测试项目</h1>
+                            <div class="inputProgramUrl" style="width: 100%;">
+                                请输入正在运行程序的运行IP+端口： <el-button type="primary" @click="showComing()">全部测试</el-button>
+                                <el-input v-model="programUrl" placeholder="Please input program running Url" clearable
+                                    style="margin-top: 10px;">
+                                    <template #prepend>http://</template>
+                                </el-input>
+                            </div>
+                            <div style="display: flex;">
+                                <el-card style="margin: 20px 5px; width: 40%;">
+                                    <h2>变量定义</h2>
+                                    <el-table :data="variables" style="width: 100%;">
+                                        <el-table-column prop="name" label="变量名"></el-table-column>
+<!--                                        <el-table-column prop="value" label="初始化值">-->
+<!--                                            <template v-slot="scope">-->
+<!--                                                <el-input v-model="scope.row.value"></el-input>-->
+<!--                                            </template>-->
+<!--                                        </el-table-column>-->
+                                        <el-table-column label="操作">
+                                            <el-button type="danger" link @click="showComing()">删除</el-button>
+                                        </el-table-column>
+                                    </el-table>
+                                </el-card>
+
+                                <el-card style="margin: 20px 5px; width: 100%;">
+                                    <h2>测试用例</h2>
+                                    <el-table :data="testCases" row-key="testCaseIndex" style="width: 100%">
+                                        <el-table-column prop="testCaseIndex" label="用例编号"
+                                            width="100px"></el-table-column>
+                                        <el-table-column prop="testCaseDescription" label="用例说明"></el-table-column>
+                                        <el-table-column prop="testCaseStatus" label="通过情况"
+                                            width="180px"></el-table-column>
+                                        <el-table-column label="操作" width="300px">
+                                            <template #default="scope">
+                                                <el-button type="primary"
+                                                    @click="toggleDetails(scope.row)">编辑详细</el-button>
+                                                <el-button type="primary" @click="testApi(scope.row)">测试</el-button>
+                                                <el-button type="danger" @click="showComing()">删除</el-button>
+                                            </template>
+                                        </el-table-column>
+                                        <template #expand="scope">
+                                            <el-table :data="scope.row.details" style="width: 100%">
+                                                <el-table-column prop="detailIndex" label="详情编号"
+                                                    width="100px"></el-table-column>
+                                                <el-table-column prop="detailDescription"
+                                                    label="详情描述"></el-table-column>
+                                            </el-table>
+                                        </template>
+                                    </el-table>
+                                </el-card>
+                            </div>
+                        </el-card>
+                    </div>
+                </el-main>
+
+                <el-drawer v-model="dialogFormVisible" :show-close="false" size="95%">
+                    <template #header="{ close, titleId, titleClass }">
+                        <h4 :id="titleId" :class="titleClass">
+                            [{{ currentOpenTestCaseData.testCaseIndex }}] {{ currentOpenTestCaseData.testCaseDescription
+                            }} {{ currentOpenTestCaseData.testCaseStatus }}
+                        </h4>
+                        <el-button type="danger" @click="close">
+                            <el-icon class="el-icon--left">
+                                <CircleCloseFilled />
+                            </el-icon>
+                            Close
+                        </el-button>
+                    </template>
+                    <div>
+                        <div style="width: 100%;display: flex;">
+                            <el-button type="primary"
+                                style="width: 80%; text-align: center; margin: auto; height: 60px; font-size: 2em;" @click="testApi(currentOpenTestCaseData)">开始测试</el-button>
+                        </div>
+                        <div style="display: flex;">
+                            <el-card style="margin: 20 10; flex-grow: 1;">
+                                <h2>初始化变量</h2>
+                                <el-button @click="showComing()">添加变量</el-button>
+                                <el-table :data="currentOpenTestCaseData.initVariables" style="width: 100%">
+                                    <el-table-column prop="name" label="变量名"></el-table-column>
+                                    <el-table-column prop="value" label="值">
+                                        <template v-slot="scope">
+                                            <el-input v-model="scope.row.value"></el-input>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </el-card>
+
+                            <el-card style="margin: 20 10; flex-grow: 1;">
+                                <h2>断言</h2>
+                                <el-table :data="currentOpenTestCaseData.assertions" style="width: 100%">
+                                    <el-table-column prop="var" label="变量"></el-table-column>
+                                    <el-table-column prop="match" label="匹配"></el-table-column>
+                                    <el-table-column prop="result" label="结果"></el-table-column>
+                                </el-table>
+                            </el-card>
+                        </div>
+                        <el-card style="margin: 20 10;">
+                            <h2>API请求</h2>
+                            <el-table :data="currentOpenTestCaseData.apiRequests" style="width: 100%">
+                                <el-table-column prop="url" label="URL"></el-table-column>
+                                <el-table-column prop="method" label="方法"></el-table-column>
+                                <el-table-column prop="headers" label="请求头">
+                                    <template v-slot="scope">
+                                        <div v-for="body in scope.row.headers" :key="body.key">
+                                            {{ body.key }}: {{ body.value }}
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="requestBody" label="请求体">
+                                    <template v-slot="scope">
+                                        <div v-for="body in scope.row.requestBody" :key="body.key">
+                                            {{ body.key }}: {{ body.value }}
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="responseBody" label="响应体">
+                                    <template v-slot="scope">
+                                        <div v-for="body in scope.row.responseBody" :key="body.var">
+                                            {{ body.var }}: {{ body.value }}
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="responseResult" label="响应结果"></el-table-column>
+                            </el-table>
+                        </el-card>
+                    </div>
+        </div>
+        </el-drawer>
+
+        </el-container>
+    </div>
+    </div>
+</body>
+<script th:inline="javascript" type="module">
+    const { ref } = Vue;
+    const { ElButton, ElForm, ElFormItem, ElInput, ElTable, ElTableColumn, ElCard, ElMessage } = ElementPlus;
+    const App = {
+
+        data() {
+            return {
+                githubUrl: '',
+                programUrl: 'localhost:8080',
+                jarPath: '',
+                dialogFormVisible: false,
+                inputValue: '',
+                dynamicTags: ['requestUserName', 'token', 'Tag 3'],
+                inputVisible: false,
+                InputRef: '',
+                loading: false,
+                repoEntityList:  [[${repoEntityList}]] ,
+                projEntityList:
+                    // [[${projEntityList}]]
+                    [
+                        {
+                            projIndex: 1,
+                            projName: 'andulir-0.0.1.jar',
+                            projBranch: 'master',
+                            projType: 'GITHUB',
+                        },
+                    ]
+                ,
+                runningEntityList:
+                    // [[${projEntityList}]]
+                    [
+                        {
+                            runningIndex: 1,
+                            runningName: 'andulir-0.0.1.jar',
+                            runningUrl: 'localhost:8080',
+                            runningType: '运行中',
+                        },
+                    ]
+                ,
+                currentOpenTestCaseData: {},
+                variables: /*[[${variableEntityList}]]*/ 'value' ,
+                testCases: /*[[${testCaseEntityList}]]*/ 'value' 
+            };
+        },
+        methods: {
+            showComing(){
+                ElMessage('正在开发中，敬请期待！')
+            },
+            toggleDetails(row) {
+                // this.$refs.testTable.toggleRowExpansion(row);
+                this.dialogFormVisible = true;
+                this.currentOpenTestCaseData = row
+                console.log(this.currentOpenTestCaseData)
+            },
+            handleClose(tag) {
+                this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1)
+            },
+            showInput() {
+                this.inputVisible = true
+                nextTick(() => {
+                    this.InputRef.focus()
+                })
+            },
+            handleInputConfirm() {
+                if (this.inputValue) {
+                    this.dynamicTags.push(this.inputValue)
+                }
+                this.inputVisible = false
+                this.inputValue = ''
+            },
+            fetchRepo() {
+                ElMessage('正在拉取：' + this.githubUrl)
+                this.loading = true
+                axios.post('/fetch-repo', {
+                    url: this.githubUrl
+                })
+                    .then(function (response) {
+                        ElMessage.success('拉取成功！')
+                        console.log(response.data);
+                        // this.repoEntityList = [[${ repoEntityList }]]
+                        // this.loading = false
+                        location.reload();
+                        // 处理响应数据
+                    })
+                    .catch(function (error) {
+                        ElMessage.error('拉取失败！')
+                        console.error('Error:', error);
+                        // location.reload();
+                    });
+                this.loading = false
+            },
+            editRepoCode(row) {
+                console.log(row)
+                window.open('http://localhost:3000/?folder=/home/workspace/' + row.repoName)
+            },
+            testApi(testCase){
+                ElMessage('Test:' +  testCase.testCaseDescription)
+                axios.post('/testCase', {
+                    testCaseIndex: testCase.testCaseIndex
+                })
+                    .then(function (response) {
+                        ElMessage.success('测试成功！')
+                        console.log(response.data);
+                        // this.repoEntityList = [[${ repoEntityList }]]
+                        // this.loading = false
+                        // location.reload();
+                        // 处理响应数据
+                    })
+                    .catch(function (error) {
+                        ElMessage.error('测试失败！')
+                        // console.error('Error:', error);
+                        // location.reload();
+                    });
+            },
+            addVar() {
+
+            }
+        },
+        mounted() {
+            this.loading = false
+            // this.initVariables.forEach(initVar => {
+            //     const variable = this.variables.find(v => v.name === initVar.name);
+            //     if (variable) {
+            //         variable.value = initVar.value;
+            //     }
+            // });
+        },
+    };
+    const app = Vue.createApp(App);
+    app.use(ElementPlus);
+    app.mount("#app");
+</script>
+
+</html>

@@ -1,0 +1,29 @@
+server:
+  port: 8085
+# Sa-Token-Quick-Login 配置
+sa:
+  # 登录账号
+  name: werun
+  # 登录密码
+  pwd: werun123
+  # 是否自动随机生成账号密码 (此项为true时, name与pwd失效)
+  auto: false
+  # 是否开启全局认证(关闭后将不再强行拦截)
+  auth: true
+  # 登录页标题
+  title: AnserTest-Demo 登录
+  # 是否显示底部版权信息
+  copr: false
+  # 指定拦截路径
+  include: /**
+  # 指定排除路径
+  # exclude: /1.jpg
+spring:
+  thymeleaf:
+    cache: off
+    suffix: .html
+    prefix: classpath:/templates/
+    encoding: utf-8
+
+anser:
+  repoPath: D:\\code\\project\\May_Anser_Demo\\anser-demo\\repo\\

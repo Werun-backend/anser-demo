@@ -1,0 +1,477 @@
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3"></script>
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+    <!-- import JavaScript -->
+    <script src="https://unpkg.com/element-plus"></script>
+    <script src="https://unpkg.com/@element-plus/icons-vue@latest/dist/index.full.js"></script>
+    <title>Anser-Test demo</title>
+    <style scoped>
+        .testCard {
+            margin: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="importmap">
+  {
+    "imports": {
+      "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+    }
+  }
+</script>
+    <div id="app">
+        <div class="common-layout">
+            <el-container>
+                <el-header>
+                    <div style="font-weight: bold; font-size: 2em;">
+                        Anser-Test Demo
+                    </div>
+                    <div>
+                        v2024.6.4-dev
+                    </div>
+                </el-header>
+                <el-main>
+                    <div style="display: flex; ">
+                        <el-card class="testCard">
+                            <h1>拉取并构建项目</h1>
+                            <div class="inputGithubUrl">
+                                请输入 Github 仓库链接：<el-button type="primary">拉取代码并构建</el-button>
+                                <el-input v-model="githubUrl" placeholder="Please input Github Repo Url" clearable
+                                    style="margin-top: 10px;">
+                                </el-input>
+
+                            </div>
+                        </el-card>
+                        <el-card class="testCard">
+                            <h1>运行项目Jar包</h1>
+                            <div class="inputJarPath">
+                                请输入 Jar 包地址：<el-button type="primary">运行项目</el-button>
+                                <el-input v-model="jarPath" placeholder="Please input .jar path" clearable
+                                    style="margin-top: 10px;">
+                                </el-input>
+                            </div>
+                        </el-card>
+                    </div>
+                    <div>
+                        <el-card class="testCard">
+                            <h1>测试项目</h1>
+                            <div class="inputProgramUrl">
+                                请输入已构建项目的运行IP+端口： <el-button type="primary">全部测试</el-button>
+                                <el-input v-model="programUrl" placeholder="Please input program running Url" clearable
+                                    style="margin-top: 10px;">
+                                    <template #prepend>http://</template>
+                                </el-input>
+
+                            </div>
+                            <div>
+                                <el-table :data="testCaseData" row-key="testCaseIndex" style="width: 100%">
+                                    <el-table-column prop="testCaseIndex" label="用例编号" width="100px"></el-table-column>
+                                    <el-table-column prop="testCaseDescription" label="用例说明"></el-table-column>
+                                    <el-table-column prop="testCaseStatus" label="通过情况" width="180px"></el-table-column>
+                                    <el-table-column label="操作" width="300px">
+                                        <template #default="scope">
+                                            <el-button type="primary" @click="toggleDetails(scope.row)">编辑详细</el-button>
+                                            <el-button type="primary">测试</el-button>
+                                            <el-button type="danger">删除</el-button>
+                                        </template>
+                                    </el-table-column>
+                                    <template #expand="scope">
+                                        <el-table :data="scope.row.details" style="width: 100%">
+                                            <el-table-column prop="detailIndex" label="详情编号"
+                                                width="100px"></el-table-column>
+                                            <el-table-column prop="detailDescription" label="详情描述"></el-table-column>
+                                        </el-table>
+                                    </template>
+                                </el-table>
+                            </div>
+                        </el-card>
+                        <div>
+
+                        </div>
+                    </div>
+
+                    <div>
+                        <div>
+                            <h2>变量管理</h2>
+                            <h3>创建变量</h3>
+                            <div class="flex gap-2">
+                                <el-tag v-for="tag in dynamicTags" :key="tag" closable :disable-transitions="false"
+                                    @close="handleClose(tag)">
+                                    {{ tag }}
+                                </el-tag>
+                                <el-input v-if="inputVisible" ref="this.InputRef" v-model="inputValue" class="w-20"
+                                    size="small" @keyup.enter="handleInputConfirm"
+                                    @blur="handleInputConfirm"></el-input>
+                                <el-button v-else class="button-new-tag" size="small" @click="showInput">
+                                    + New Tag
+                                </el-button>
+                            </div>
+                            <h3>初始赋值</h3>
+                        </div>
+                        <div>
+                            <h2>接口管理</h2>
+                        </div>
+                        <div>
+                            <h2>断言管理</h2>
+                        </div>
+                    </div>
+                    <div>
+                        <el-card>
+                            <h2>基础URL</h2>
+                            <el-form>
+                                <el-form-item label="Base URL">
+                                    <el-input v-model="baseUrl"></el-input>
+                                </el-form-item>
+                            </el-form>
+                        </el-card>
+
+                        <el-card>
+                            <h2>变量定义</h2>
+                            <el-table :data="variables" style="width: 100%; height: 100px;">
+                                <el-table-column prop="name" label="变量名"></el-table-column>
+                                <el-table-column prop="value" label="值">
+                                    <template v-slot="scope">
+                                        <el-input v-model="scope.row.value"></el-input>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-card>
+
+                        <el-card>
+                            <h2>初始化变量</h2>
+                            <el-table :data="initVariables" style="width: 100%">
+                                <el-table-column prop="name" label="变量名"></el-table-column>
+                                <el-table-column prop="value" label="值">
+                                    <template v-slot="scope">
+                                        <el-input v-model="scope.row.value"></el-input>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-card>
+
+                        <el-card>
+                            <h2>测试用例</h2>
+                            <div v-for="testCase in testCases" :key="testCase.name">
+                                <el-card>
+                                    <h3>{{ testCase.name }}</h3>
+                                    <h4>API请求</h4>
+                                    <el-table :data="testCase.apiRequests" style="width: 100%">
+                                        <el-table-column prop="url" label="URL"></el-table-column>
+                                        <el-table-column prop="method" label="方法"></el-table-column>
+                                        <el-table-column prop="requestBody" label="请求体">
+                                            <template v-slot="scope">
+                                                <div v-for="body in scope.row.requestBody" :key="body.key">
+                                                    {{ body.key }}: {{ body.value }}
+                                                </div>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column prop="responseBody" label="响应体">
+                                            <template v-slot="scope">
+                                                <div v-for="body in scope.row.responseBody" :key="body.var">
+                                                    {{ body.var }}: {{ body.value }}
+                                                </div>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+
+                                    <h4>断言</h4>
+                                    <el-table :data="testCase.assertions" style="width: 100%">
+                                        <el-table-column prop="var" label="变量"></el-table-column>
+                                        <el-table-column prop="match" label="匹配"></el-table-column>
+                                    </el-table>
+                                </el-card>
+                            </div>
+                        </el-card>
+                    </div>
+                </el-main>
+
+                <el-drawer v-model="dialogFormVisible" :show-close="false" size="60%">
+                    <template #header="{ close, titleId, titleClass }">
+                        <h4 :id="titleId" :class="titleClass">
+                            [{{ currentOpenTestCaseData.testCaseIndex }}] {{ currentOpenTestCaseData.testCaseDescription
+                            }} {{ currentOpenTestCaseData.testCaseStatus }}
+                        </h4>
+                        <el-button type="danger" @click="close">
+                            <el-icon class="el-icon--left">
+                                <CircleCloseFilled />
+                            </el-icon>
+                            Close
+                        </el-button>
+                    </template>
+
+
+
+                </el-drawer>
+
+            </el-container>
+        </div>
+    </div>
+</body>
+<script th:inline="javascript" type="module">
+    const { ref } = Vue;
+    const { ElButton, ElForm, ElFormItem, ElInput, ElTable, ElTableColumn, ElCard } = ElementPlus;
+    const App = {
+
+        data() {
+            return {
+                githubUrl: '',
+                programUrl: '',
+                jarPath: '',
+                dialogFormVisible: false,
+                inputValue: '',
+                dynamicTags: ['requestUserName', 'token', 'Tag 3'],
+                inputVisible: false,
+                InputRef: '',
+                testCaseData: [
+                    {
+                        testCaseIndex: 1,
+                        testCaseDescription: '测试所有接口连通性',
+                        testCaseStatus: '未测试',
+                        details: [
+                            { detailIndex: '1.1', detailDescription: '接口1 详情描述' },
+                            { detailIndex: '1.2', detailDescription: '接口2 详情描述' }
+                        ]
+                    },
+                    {
+                        testCaseIndex: 2,
+                        testCaseDescription: '测试登录注册与Token使用',
+                        testCaseStatus: '部分接口通过',
+                        details: [
+                            { detailIndex: '2.1', detailDescription: '登录接口详情描述' },
+                            { detailIndex: '2.2', detailDescription: '注册接口详情描述' }
+                        ]
+                    },
+                    {
+                        testCaseIndex: 3,
+                        testCaseDescription: '测试错误数据是否能够进行异常处理',
+                        testCaseStatus: '全部接口通过',
+                        details: [
+                            { detailIndex: '3.1', detailDescription: '错误数据处理详情描述' }
+                        ]
+                    },
+                ],
+                currentOpenTestCaseData: {
+
+                },
+
+                baseUrl: 'http://localhost:8080',
+                variables: [
+                    { name: 'inputUsername', value: '' },
+                    { name: 'inputPassword', value: '' },
+                    { name: 'outputUsername', value: '' },
+                    { name: 'token', value: '' },
+                    { name: 'code', value: '' },
+                    { name: 'code200', value: '' }
+                ],
+                initVariables: [
+                    { name: 'inputUsername', value: 'jinyong' },
+                    { name: 'inputPassword', value: '123456' },
+                    { name: 'code200', value: '200' }
+                ],
+                testCases: [
+                    {
+                        name: '测试登录账号并获得个人信息',
+                        apiRequests: [
+                            {
+                                url: '/login',
+                                method: 'POST',
+                                requestBody: [
+                                    { key: 'username', value: 'inputUsername' },
+                                    { key: 'password', value: 'inputPassword' }
+                                ],
+                                responseBody: [
+                                    { var: 'outputUsername', value: 'data.empVo.username' }
+                                ]
+                            }
+                        ],
+                        assertions: [
+                            { var: 'outputUsername', match: 'inputUsername' }
+                        ]
+                    },
+                    {
+                        name: '测试登录账号并获得个人信息 比对登录信息和获得的个人信息',
+                        apiRequests: [
+                            {
+                                url: '/login',
+                                method: 'POST',
+                                requestBody: [
+                                    { key: 'username', value: 'inputUsername' },
+                                    { key: 'password', value: 'inputPassword' }
+                                ],
+                                responseBody: [
+                                    { var: 'token', value: 'data.token' }
+                                ]
+                            },
+                            {
+                                url: '/user/information',
+                                method: 'GET',
+                                headers: [
+                                    { key: 'Authorization', value: 'token' }
+                                ],
+                                responseBody: [
+                                    { var: 'name', value: 'data.username' },
+                                    { var: 'code', value: 'code' }
+                                ]
+                            }
+                        ],
+                        assertions: [
+                            { var: 'name', match: 'assertName' },
+                            { var: 'code', match: 'code200' }
+                        ]
+                    }
+                ]
+
+            };
+        },
+        methods: {
+            toggleDetails(row) {
+                // this.$refs.testTable.toggleRowExpansion(row);
+                this.dialogFormVisible = true;
+                this.currentOpenTestCaseData = row
+                console.log(this.currentOpenTestCaseData)
+            },
+            handleClose(tag) {
+                this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1)
+            },
+            showInput() {
+                this.inputVisible = true
+                nextTick(() => {
+                    this.InputRef.focus()
+                })
+            },
+            handleInputConfirm() {
+                if (this.inputValue) {
+                    this.dynamicTags.push(this.inputValue)
+                }
+                this.inputVisible = false
+                this.inputValue = ''
+            },
+        },
+        mounted() {
+            this.initVariables.forEach(initVar => {
+                const variable = this.variables.find(v => v.name === initVar.name);
+                if (variable) {
+                    variable.value = initVar.value;
+                }
+            });
+        },
+    };
+    const app = Vue.createApp(App);
+    app.use(ElementPlus);
+    app.mount("#app");
+</script>
+
+</html>
+
+repoEntityList:  [[${repoEntityList}]]
+[
+    {
+        repoIndex: 1,
+        repoName: 'bearslyricattack/Andulir',
+        repoBranch: 'master',
+        repoType: 'GITHUB',
+    },
+    {
+        repoIndex: 2,
+        repoName: 'rest-assured/rest-assured',
+        repoBranch: 'dev_zfr',
+        repoType: 'GITHUB',
+    },
+]
+,
+
+variables: 
+/*[[${variableEntityList}]]*/ 'value' 
+
+// [
+//     { name: '#inputUsername', value: '' },
+//     { name: '#inputPassword', value: '' },
+//     { name: '#outputUsername', value: '' },
+//     { name: '#token', value: '' },
+//     { name: '#code', value: '' },
+//     { name: '#code200', value: '' }
+// ]
+,
+
+testCases: 
+/*[[${testCaseEntityList}]]*/ 'value' 
+
+
+// [
+//     {
+//         testCaseIndex: 1,
+//         testCaseDescription: '测试登录注册接口连通性',
+//         testCaseStatus: '接口通过',
+//         initVariables: [
+//             { name: '#inputUsername', value: 'jinyong' },
+//             { name: '#inputPassword', value: '123456' },
+//             { name: '#code200', value: '200' }
+//         ],
+//         apiRequests: [
+//             {
+//                 url: '/login',
+//                 method: 'POST',
+//                 requestBody: [
+//                     { key: 'username', value: '#inputUsername' },
+//                     { key: 'password', value: '#inputPassword' }
+//                 ],
+//                 responseBody: [
+//                     { var: '#outputUsername', value: 'data.empVo.username' }
+//                 ],
+//                 responseResult: '未测试'
+//             }
+//         ],
+//         assertions: [
+//             { var: '#outputUsername', match: '#inputUsername', result: '通过' }
+//         ]
+//     },
+
+//     {
+//         testCaseIndex: 2,
+//         testCaseDescription: '测试登录账号并获得个人信息 比对登录信息和获得的个人信息',
+//         testCaseStatus: '未测试',
+//         // name: '测试登录账号并获得个人信息 比对登录信息和获得的个人信息',
+//         initVariables: [
+//             { name: '#inputUsername', value: 'jinyong' },
+//             { name: '#inputPassword', value: '123456' },
+//             { name: '#code200', value: '200' }
+//         ],
+//         apiRequests: [
+//             {
+//                 url: '/login',
+//                 method: 'POST',
+//                 requestBody: [
+//                     { key: 'username', value: '#inputUsername' },
+//                     { key: 'password', value: '#inputPassword' }
+//                 ],
+//                 responseBody: [
+//                     { var: '#token', value: 'data.token' }
+//                 ],
+//                 responseResult: '未测试'
+//             },
+//             {
+//                 url: '/user/information',
+//                 method: 'GET',
+//                 headers: [
+//                     { key: 'Authorization', value: '#token' }
+//                 ],
+//                 responseBody: [
+//                     { var: '#name', value: 'data.username' },
+//                     { var: '#code', value: 'code' }
+//                 ],
+//                 responseResult: '未测试'
+//             }
+//         ],
+//         assertions: [
+//             { var: '#name', match: '#assertName', result: '不通过' },
+//             { var: '#code', match: '#code200', result: '通过' }
+//         ]
+//     }
+// ]
