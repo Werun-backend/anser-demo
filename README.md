@@ -14,4 +14,31 @@
 - Demo项目：主项目单体Springboot+前后端不分离，主要用于主要功能设计 + 实现 + 初步演示，不需要保证bug free与稳定性。
 - 正式项目：用于正式部署使用，计划为微服务 + Docker容器，目前尚未开发。
 
+## Anser-Demo 项目运行展示
+
 ![img.png](img.png)
+
+## Anser-demo 环境配置
+
+- 环境需求：Java1.8 + Docker 24.0.7
+- 选定一个拉取代码仓库的路径 `repoPath`
+
+### Anser-demo 配置
+
+- 将 `application.yml` 文件中`asner.repoPath`改成上文的 `repoPath`
+
+### Docker 配置
+
+1. 参照Docker官方文档，安装Docker Desktop
+2. 在`repoPath`路径下运行：
+
+```
+docker run -it --init -p 3000:3000 -v "$(pwd):/home/workspace:cached" gitpod/openvscode-server
+```
+3. 打开 http://localhost:3000 若成功打开则open-vscode运行成功。
+
+### 启动说明
+
+1. 启动主类 `AnserApplication`
+2. 浏览器访问 http://localhost:8085
+3. 用户名和密码在 application.yml 里进行查看与修改。
