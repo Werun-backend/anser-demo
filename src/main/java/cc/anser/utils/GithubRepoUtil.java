@@ -6,7 +6,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,8 +14,13 @@ import java.util.List;
 
 public class GithubRepoUtil {
 
+    /**
+     * 根据仓库名拉取代码到指定路径
+     * @param repoName 作者/仓库名 如 Werun-backend/anser-demo
+     * @param repoPath 本地路径
+     */
     public static void getRepo(String repoName, String repoPath) throws IOException, GitAPIException {
-        GitHub github = new GitHubBuilder().withPassword("Donnie518","Zfr2150483").build();
+        GitHub github = new GitHubBuilder().withPassword("","").build();
         GHRepository repo = github.getRepository(repoName);
         System.out.println("repo.getGitTransportUrl() = " + repo.getGitTransportUrl());
         System.out.println("repo.getHtmlUrl() = " + repo.getHtmlUrl());
